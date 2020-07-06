@@ -7,7 +7,7 @@
  */
 
 import React, { Component } from 'react';
-import { Text, View, FlatList, TouchableOpacity } from 'react-native';
+import { Text, View, FlatList, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import { Container, Content, Header, Body, Title, Input, Button } from 'native-base';
 import SLIIcon from 'react-native-vector-icons/dist/SimpleLineIcons'
 
@@ -19,7 +19,7 @@ export default class App extends Component
 
     this.state =
     {
-      employeeCode: '1',
+      employeeCode: '',
       response: [],
       error: '',
     };
@@ -39,7 +39,7 @@ export default class App extends Component
 
     if(employeeCode === '')
     {
-      this.renderError('NO_ID')
+      this.setError('NO_CODE')
       return false
     }
 
@@ -66,9 +66,7 @@ export default class App extends Component
     })
     .catch((error) =>
     {
-      console.log(error.message)
-
-      this.renderError(error.message)
+      this.setError(error.message)
     })
   }
 
@@ -77,13 +75,13 @@ export default class App extends Component
     this.setState({ response: [], employeeCode: '' })
   }
 
-  renderError(errorMessage)
+  setError(errorMessage)
   {
     switch(errorMessage)
     {
-      case 'NO_ID':
+      case 'NO_CODE':
       {
-        this.setState({ error: 'Please enter an ID.' })
+        this.setState({ error: 'Please enter a code.' })
         break
       }
       case 'ERROR_SERVIDOR':
@@ -93,7 +91,7 @@ export default class App extends Component
       }
       case 'SIN_INFORMACION':
       {
-        this.setState({ error: 'There is no data available for the ID entered.'})
+        this.setState({ error: 'There is no data available for the entered code.'})
         break
       }
       default:
@@ -111,23 +109,23 @@ export default class App extends Component
     }
 
     return (
-      <View style={{ borderColor: '#64B9F1', borderWidth: 1, borderRadius: 5, flexDirection: 'row', marginVertical: 10, justifyContent: 'space-around', paddingVertical: 10 }} key={item.registryInternalKey.toString()}>
+      <View style={ styles.itemContainer } key={item.registryInternalKey.toString()}>
         
-        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 20}}>{`${item.id}`}</Text>
+        <View style={ styles.idContainer }>
+          <Text style={ styles.id }>{`${item.id}`}</Text>
         </View>
 
-        <View style={{ justifyContent: 'center' }}>
-          <Text><Text style={{ fontWeight: 'bold' }}>Date: </Text>{`${item.date}`}</Text>
+        <View style={ styles.dateStatusContainer }>
+          <Text><Text style={ styles.label }>Date: </Text>{`${item.date}`}</Text>
           {
             item.shouldDisplayStatus ?
-            <Text><Text style={{ fontWeight: 'bold' }}>Status: </Text>{`${item.status}`}</Text>
+            <Text><Text style={ styles.label }>Status: </Text>{`${item.status}`}</Text>
             :
             null
           }
         </View>
 
-        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <View style={ styles.iconContainer }>
           <SLIIcon name={item.type === 'clock in' ? 'login' : 'logout'} size={30}/>
         </View>
       </View>
@@ -138,68 +136,185 @@ export default class App extends Component
   {
     return (
       <Container>
-        <Header style={{ backgroundColor: '#F8F8F8' }} androidStatusBarColor='#F8F8F8'>
-          <Body style={{ alignItems: 'center' }}>
-            <Title style={{ color: 'black', fontWeight: 'bold' }}>iTex</Title>
+        <Header style={ styles.header } androidStatusBarColor='#F8F8F8'>
+          <StatusBar barStyle={"dark-content"} />
+          <Body style={ styles.body }>
+            <Title style={ styles.title }>iTex</Title>
           </Body>
         </Header>
-        <Content style={{ paddingHorizontal : 15}}>
-          <View style={{ marginVertical: 10 }}>
-            <Text>Enter your employee code:</Text>
-            <Input
-              style={{ borderWidth: 1, borderRadius: 2, borderColor: 'lightgray', paddingVertical: 5, marginVertical: 5 }}
-              value={this.state.employeeCode}
-              onChangeText={ (employeeCode) => this.updateEmployeeCode(employeeCode) }
-              returnKeyType="go"
-              onSubmitEditing={() => { this.onCheckDataPress() }}
-            />
-          </View>
-
-          {
-            this.state.error &&
-            <View style={{ alignContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: 'red', textAlign: 'center' }}>{this.state.error}</Text>
+        <Content style={ styles.content }>
+            <View style={ styles.form }>
+              <Text style={ styles.inputLabel }>Enter your employee code:</Text>
+              <Input
+                style={ styles.input }
+                value={this.state.employeeCode}
+                onChangeText={ (employeeCode) => this.updateEmployeeCode(employeeCode) }
+                returnKeyType="go"
+                onSubmitEditing={() => { this.onCheckDataPress() }}
+              />
             </View>
-            ||
-            null
-          }
 
-          <View style={{ alignContent: 'center', alignItems: 'center', marginVertical: 10 }}>
-            {this.state.employeeCode && <Text style={{ color: '#BBBBBB' }}>Hello employee {this.state.employeeCode}!</Text> || null}
-            <View
-              style={{
-                borderBottomColor: '#BBBBBB',
-                borderBottomWidth: 1,
-                width: 100,
-                margin: 10
-              }}
+            {
+              this.state.error &&
+              <View style={ styles.errorContainer }>
+                <Text style={ styles.error }>{this.state.error}</Text>
+              </View>
+              ||
+              null
+            }
+
+            <View style={ styles.greetingContainer }>
+              {this.state.employeeCode && <Text style={ styles.greeting }>Hello employee {this.state.employeeCode}!</Text> || null}
+              <View
+                style={ styles.verticalLine }
+              />
+            </View>
+
+            <View>
+              <Button style={ styles.button }
+              onPress={ () => this.onCheckDataPress() }
+              >
+                <Text style={ styles.buttonLabel }>Check data</Text>
+              </Button>
+            </View>
+
+            {
+              this.state.response.length > 0 ?
+              <TouchableOpacity onPress={() => { this.onClearDatePress() }} style={ styles.clearButton }>
+               <Text style={ styles.clearButtonLabel }>Clear data</Text>
+              </TouchableOpacity>
+              :
+              null
+            }
+
+            <FlatList
+              data={this.state.response}
+              showsVerticalScrollIndicator={ false }
+              renderItem={( { item } ) => this.renderItem(item) }
             />
-          </View>
-
-          <View>
-            <Button style={{ backgroundColor: '#307CF6', alignSelf:'center', paddingHorizontal: 10, borderRadius: 5, marginBottom: 20 }}
-            onPress={ () => this.onCheckDataPress() }
-            >
-              <Text style={{ color: 'white'}}>Check data</Text>
-            </Button>
-          </View>
-
-          {
-            this.state.response.length > 0 ?
-            <TouchableOpacity onPress={() => { this.onClearDatePress() }} style={{ justifyContent: 'felx-end', backgroundColor: 'red' }}>
-             <Text>Clear data</Text>
-            </TouchableOpacity>
-            :
-            null
-          }
-
-          <FlatList
-            data={this.state.response}
-            showsVerticalScrollIndicator={ false }
-            renderItem={( { item } ) => this.renderItem(item) }
-          />
         </Content>
       </Container>
     );
   }
 }
+
+const styles = StyleSheet.create(
+{
+  header:
+  {
+    backgroundColor: '#F8F8F8'
+  },
+  body:
+  {
+    alignItems: 'center'
+  },
+  title:
+  {
+    color: 'black',
+    fontWeight: 'bold'
+  },
+  content:
+  {
+    paddingHorizontal : 15,
+    marginTop: 15
+  },
+  form:
+  {
+    marginVertical: 10
+  },
+  inputLabel:
+  {
+    color: 'gray'
+  },
+  input:
+  {
+    borderWidth: 1,
+    borderRadius: 2,
+    borderColor: 'lightgray',
+    paddingVertical: 5,
+    marginVertical: 5
+  },
+  errorContainer:
+  {
+    alignContent: 'center',
+    alignItems: 'center'
+  },
+  error:
+  {
+    color: 'red',
+    textAlign: 'center'
+  },
+  greetingContainer:
+  {
+    alignContent: 'center',
+    alignItems: 'center',
+    marginVertical: 10
+  },
+  verticalLine:
+  {
+    borderBottomColor: '#BBBBBB',
+    borderBottomWidth: 1,
+    width: 100,
+    margin: 10
+  },
+  greeting:
+  {
+    color: '#BBBBBB'
+  },
+  button:
+  {
+    backgroundColor: '#307CF6',
+    alignSelf:'center',
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginBottom: 20
+  },
+  buttonLabel:
+  {
+    color: 'white'
+  },
+  clearButton:
+  {
+    alignItems: 'flex-end'
+  },
+  clearButtonLabel:
+  {
+    color: 'gray'
+  },
+  itemContainer:
+  {
+    borderColor: '#64B9F1',
+    borderWidth: 1,
+    borderRadius: 5,
+    flexDirection: 'row',
+    marginVertical: 10,
+    justifyContent: 'space-around',
+    paddingVertical: 10
+  },
+  idContainer:
+  {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  id:
+  {
+    fontWeight: 'bold',
+    fontSize: 20
+  },
+  dateStatusContainer:
+  {
+    justifyContent: 'center'
+  },
+  label:
+  {
+    fontWeight: 'bold'
+  },
+  iconContainer:
+  {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+
+
+
+})
